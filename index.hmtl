@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>App Moda - Favoritos</title>
+
+<style>
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto;background:#f2f2f2;}
+.app{max-width:420px;margin:auto;background:white;min-height:100vh;}
+.header{padding:15px;font-weight:bold;font-size:18px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;}
+.tab-btn{cursor:pointer;color:#888}
+.tab-btn.active{color:#e53935;font-weight:bold}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px;}
+.card{background:white;border-radius:12px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,0.08);position:relative;}
+.card img{width:100%;height:160px;object-fit:cover;}
+.info{padding:10px;}
+.price{font-weight:bold;}
+.heart{position:absolute;top:10px;right:10px;background:white;border-radius:50%;width:35px;height:35px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;transition:.2s;}
+.heart.active{background:#ffebee;color:#e53935;transform:scale(1.2);}
+.burst{position:absolute;top:10px;right:10px;width:35px;height:35px;border-radius:50%;pointer-events:none;}
+.burst::after{content:"";position:absolute;width:100%;height:100%;border-radius:50%;background:rgba(229,57,53,0.3);transform:scale(0);}
+.burst.animate::after{animation:pop .4s ease;}
+@keyframes pop{0%{transform:scale(0);opacity:1}100%{transform:scale(2);opacity:0}}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:black;color:white;padding:10px 15px;border-radius:20px;opacity:0;transition:.3s;}
+.toast.show{opacity:1}
+.hidden{display:none}
+.empty{padding:20px;text-align:center;color:#777}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+  <div class="header">
+    <span id="tabExplorar" class="tab-btn active" onclick="trocarTela('explorar')">Explorar</span>
+    <span id="tabFavoritos" class="tab-btn" onclick="trocarTela('favoritos')">Favoritos ❤️</span>
+  </div>
+
+  <!-- TELA EXPLORAR -->
+  <div id="explorar" class="grid">
+
+    <div class="card" data-nome="Jaqueta Jeans">
+      <div class="heart" onclick="fav(this)">♡</div>
+      <div class="burst"></div>
+      <img src="https://images.unsplash.com/photo-1611312449408-fcece27cdbb7?q=80&w=369&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D">
+      <div class="info">
+        <div>Jaqueta Jeans</div>
+        <div class="price">R$ 199</div>
+      </div>
+    </div>
+
+    <div class="card" data-nome="Camiseta Básica">
+      <div class="heart" onclick="fav(this)">♡</div>
+      <div class="burst"></div>
+      <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400">
+      <div class="info">
+        <div>Camiseta Básica</div>
+        <div class="price">R$ 79</div>
+      </div>
+    </div>
+
+    <div class="card" data-nome="Blusa de Moletom">
+      <div class="heart" onclick="fav(this)">♡</div>
+      <div class="burst"></div>
+      <img src="https://images.unsplash.com/photo-1623114112814-c78c4d25f24c?q=80&w=387&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D">
+      <div class="info">
+        <div>Moletom</div>
+        <div class="price">R$ 149</div>
+      </div>
+    </div>
+
+    <div class="card" data-nome="Camiseta Social">
+      <div class="heart" onclick="fav(this)">♡</div>
+      <div class="burst"></div>
+      <img src="https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=400">
+      <div class="info">
+        <div>Casaco</div>
+        <div class="price">R$ 99</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TELA FAVORITOS -->
+  <div id="favoritos" class="grid hidden"></div>
+
+  <div id="emptyFav" class="empty hidden">Nenhum item favoritado ainda</div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let favoritos = [];
+
+function trocarTela(tela){
+  document.getElementById('explorar').classList.add('hidden');
+  document.getElementById('favoritos').classList.add('hidden');
+  document.getElementById('emptyFav').classList.add('hidden');
+
+  document.getElementById('tabExplorar').classList.remove('active');
+  document.getElementById('tabFavoritos').classList.remove('active');
+
+  if(tela === 'explorar'){
+    document.getElementById('explorar').classList.remove('hidden');
+    document.getElementById('tabExplorar').classList.add('active');
+  } else {
+    document.getElementById('favoritos').classList.remove('hidden');
+    document.getElementById('tabFavoritos').classList.add('active');
+    renderFavoritos();
+  }
+}
+
+function fav(el){
+  let card = el.parentElement;
+  let nome = card.dataset.nome;
+  let img = card.querySelector('img').src;
+  let preco = card.querySelector('.price').innerText;
+  let burst = card.querySelector('.burst');
+
+  el.classList.toggle('active');
+  el.innerHTML = el.classList.contains('active') ? '❤' : '♡';
+
+  burst.classList.remove('animate');
+  void burst.offsetWidth;
+  burst.classList.add('animate');
+
+  if(el.classList.contains('active')){
+    favoritos.push({nome,img,preco});
+    showToast('Adicionado aos favoritos ❤️');
+  } else {
+    favoritos = favoritos.filter(f => f.nome !== nome);
+    showToast('Removido dos favoritos');
+  }
+}
+
+function renderFavoritos(){
+  let container = document.getElementById('favoritos');
+  container.innerHTML = '';
+
+  if(favoritos.length === 0){
+    document.getElementById('emptyFav').classList.remove('hidden');
+    return;
+  }
+
+  favoritos.forEach(item => {
+    container.innerHTML += `
+      <div class="card">
+        <img src="${item.img}">
+        <div class="info">
+          <div>${item.nome}</div>
+          <div class="price">${item.preco}</div>
+        </div>
+      </div>
+    `;
+  });
+}
+
+function showToast(msg){
+  let toast = document.getElementById('toast');
+  toast.innerText = msg;
+  toast.classList.add('show');
+  setTimeout(()=>toast.classList.remove('show'),1500);
+}
+</script>
+
+</body>
+</html>
